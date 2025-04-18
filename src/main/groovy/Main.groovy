@@ -33,8 +33,6 @@ def static readDoubleInput(String prompt) {
 }
 
 def static getIntegrationInput() {
-    println("### Enter Inputs ###")
-
     def function = readFunctionInput()
     // Read bounds (for definite integral)
     double a = readDoubleInput("Enter lower bound (a): ")
@@ -48,7 +46,7 @@ def static getIntegrationInput() {
 
 // Attempt u-substitution
 static String uSubstitution(String integrand) {
-    // Simple pattern matching for common u-sub cases
+    // common u-sub cases
     def patterns = [
             // Polynomial: kx^n
             /(\d+)x\^(\d+)/      : { m ->
@@ -134,24 +132,13 @@ static String integrate(String integrand) {
         if (result != null) return result
     }
 
-    // Try u-substitution if basic rules don't apply
+    //  if basic rules don't apply
     def uSubResult = uSubstitution(integrand)
     if (uSubResult != null) return uSubResult
 
     return "Could not find integration method for: $integrand"
 }
 
-def static validateExpression(String input) {
-    try {
-        Binding binding = new Binding()
-        binding.setVariable("x", 1) // Test with a sample value
-        GroovyShell shell = new GroovyShell(binding)
-        shell.evaluate(input)
-        return true
-    } catch (Exception e) {
-        return false
-    }
-}
 
 static void main(String[] args) {
     println("Choose mode:")
@@ -166,7 +153,6 @@ static void main(String[] args) {
         return
     }
     if (choice == 1) {
-        println("### Enter Inputs ###")
         print("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
         String function = new Scanner(System.in).nextLine().trim()
         println "∫ $function dx = ${integrate(function)} + C"
