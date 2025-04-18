@@ -1,92 +1,61 @@
-static double simpsonsRule(Closure<Double> f, double a, double b, int n) {
-    if (n % 2 != 0) {
-        n++
-    }
 
+static void main(String[] args) {
+    def choicePrompt = "Choose mode:\n1. Symbolic Integration using U-Substitution\n2. Numerical Integration using Simpson's Rule\nEnter choice 1 or 2: "
+    int choice = readIntInput(choicePrompt)
+    switch (choice) {
+        case 1:
+            handleSymbolicIntegration()
+            break
+        case 2:
+            handleNumericalIntegration()
+            break
+        default:
+            println("We only expected 1 or 2.")
+    }
+}
+
+static void handleSymbolicIntegration() {
+    String function = readStringInput("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
+    println "∫ $function dx = ${integrate(function)} + C"
+}
+
+static void handleNumericalIntegration() {
+    def (function, a, b, n) = getIntegrationInput()
+    Closure<Double> f = createFunctionClosure(function)
+    double result = simpsonsRule(f, a, b, n)
+    println "∫[$a, $b] $function dx ≈ $result"
+}
+
+static Closure<Double> createFunctionClosure(String function) {
+    return { x ->
+        Binding binding = new Binding()
+        binding.setVariable("x", x)
+        GroovyShell shell = new GroovyShell(binding)
+        try {
+            return shell.evaluate(function) as Double
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to evaluate function '$function' at x=$x")
+        }
+    }
+}
+
+static double simpsonsRule(Closure<Double> f, double a, double b, int n) {
+    if (n % 2 != 0) n++
     double h = (b - a) / n
     double sum = f(a) + f(b)
-
     (1..<n).each { i ->
         double x = a + i * h
         sum += (i % 2 == 0) ? 2 * f(x) : 4 * f(x)
     }
-
     return (h / 3) * sum
 }
 
-def static readFunctionInput() {
-    print("Enter function (Math.sin(x), Math.cos(x), Math.exp(x), x*x): ")
-    return new Scanner(System.in).nextLine().trim()
-}
-
-def static readDoubleInput(String prompt) {
-    Scanner scanner = new Scanner(System.in)
-    while (true) {
-        try {
-            print(prompt)
-            return scanner.nextDouble()
-        } catch (Exception e) {
-            println("Invalid input! Please enter a number.")
-            scanner.next() // Clear invalid input
-        }
-    }
-}
-
-def static getIntegrationInput() {
-    def function = readFunctionInput()
-    // Read bounds (for definite integral)
+static def getIntegrationInput() {
+    String function = readStringInput("Enter function (Math.sin(x), Math.cos(x), Math.exp(x), x*x): ")
     double a = readDoubleInput("Enter lower bound (a): ")
     double b = readDoubleInput("Enter upper bound (b): ")
-
-    // Read number of intervals (for numerical methods)
     int n = (int) readDoubleInput("Enter number of intervals (n): ")
-
     return [function, a, b, n]
-}
-
-// Attempt u-substitution
-static String uSubstitution(String integrand) {
-    // common u-sub cases
-    def patterns = [
-            // Polynomial: kx^n
-            /(\d+)x\^(\d+)/      : { m ->
-                def coeff = m[0][1] ? m[0][1] as Integer : 1
-                def power = m[0][2] as Integer
-                return [
-                        u     : "x^${power + 1}",
-                        du    : "${(power + 1) * coeff}x^${power}",
-                        result: "(${coeff}/${power + 1})x^${power + 1}"
-                ]
-            },
-            // Exponential: e^kx
-            /e\^(\d+)x/          : { m ->
-                def coeff = m[0][1] ? m[0][1] as Integer : 1
-                return [
-                        u     : "e^${coeff}x",
-                        du    : "${coeff}e^${coeff}x",
-                        result: "(1/${coeff})e^${coeff}x"
-                ]
-            },
-            // Trig: sin(kx) or cos(kx)
-            /(sin|cos)\((\d+)x\)/: { m ->
-                def func = m[0][1]
-                def coeff = m[0][2] as Integer
-                return [
-                        u: "${func}(${coeff}x)",
-                        du: "${coeff}${func == 'sin' ? 'cos' : '-sin'}(${coeff}x)",
-                        result: func == "sin" ? "(-1/${coeff})cos(${coeff}x)" : "(1/${coeff})sin(${coeff}x)"
-                ]
-            }
-    ]
-
-    for (pattern in patterns) {
-        def matcher = (integrand =~ pattern.key)
-        if (matcher.matches()) {
-            def substitution = pattern.value(matcher)
-            return substitution.result
-        }
-    }
-    return null
 }
 
 static String integrate(String integrand) {
@@ -99,7 +68,7 @@ static String integrate(String integrand) {
                 ]
                 return trigFuncs[expr]
             },
-            'constant'    : { String expr ->
+            'constant'   : { String expr ->
                 if (expr == '1') return 'x'
                 if (expr.matches(/^(\d+|\d+\.\d+)$/)) {
                     def coeff = expr as double
@@ -123,55 +92,74 @@ static String integrate(String integrand) {
                 }
                 return null
             }
-
     ]
 
-    // basic integration rules
     for (rule in integrationRules.values()) {
         def result = rule(integrand)
         if (result != null) return result
     }
 
-    //  if basic rules don't apply
     def uSubResult = uSubstitution(integrand)
     if (uSubResult != null) return uSubResult
 
     return "Could not find integration method for: $integrand"
 }
 
-
-static void main(String[] args) {
-    println("Choose mode:")
-    println("1. Symbolic Integration using U-Substitution")
-    println("2. Numerical Integration using Simpsons Rule")
-    print("Enter choice 1 or 2: ")
-    def choice;
-    try {
-        choice = new Scanner(System.in).nextInt()
-    } catch (InputMismatchException e1) {
-        println("Invalid input! Please enter a number.")
-        return
-    }
-    if (choice == 1) {
-        print("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
-        String function = new Scanner(System.in).nextLine().trim()
-        println "∫ $function dx = ${integrate(function)} + C"
-    } else if (choice == 2) {
-        def (function, a, b, n) = getIntegrationInput()
-        Closure<Double> f = { x ->
-            Binding binding = new Binding()
-            binding.setVariable("x", x)
-            GroovyShell shell = new GroovyShell(binding)
-            try {
-                return shell.evaluate(function) as Double
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Failed to evaluate function '$function' at x=$x")
+static String uSubstitution(String integrand) {
+    def patterns = [
+            /(\d+)x\^(\d+)/      : { m ->
+                def coeff = m[0][1] ? m[0][1] as Integer : 1
+                def power = m[0][2] as Integer
+                return "(${coeff}/${power + 1})x^${power + 1}"
+            },
+            /e\^(\d+)x/          : { m ->
+                def coeff = m[0][1] ? m[0][1] as Integer : 1
+                return "(1/${coeff})e^${coeff}x"
+            },
+            /(sin|cos)\((\d+)x\)/: { m ->
+                def func = m[0][1]
+                def coeff = m[0][2] as Integer
+                return func == "sin" ? "(-1/${coeff})cos(${coeff}x)" : "(1/${coeff})sin(${coeff}x)"
             }
+    ]
+
+    for (pattern in patterns) {
+        def matcher = (integrand =~ pattern.key)
+        if (matcher.matches()) {
+            return pattern.value(matcher)
         }
-        double result = simpsonsRule(f, a, b, n)
-        println "∫[$a, $b] $function dx ≈ $result"
-    } else {
-        println("We only expected 1 or 2.")
+    }
+    return null
+}
+
+static String readStringInput(String prompt) {
+    print(prompt)
+    return new Scanner(System.in).nextLine().trim()
+}
+
+static double readDoubleInput(String prompt) {
+    Scanner scanner = new Scanner(System.in)
+    while (true) {
+        try {
+            print(prompt)
+            return scanner.nextDouble()
+        } catch (Exception e) {
+            println("Invalid input! Please enter a valid value.")
+            scanner.next() // Clear invalid input
+        }
+    }
+}
+
+static int readIntInput(String prompt) {
+    Scanner scanner = new Scanner(System.in)
+    while (true) {
+        try {
+            print(prompt)
+            return scanner.nextInt()
+        } catch (Exception e) {
+            println("Invalid input! Please enter a valid value.")
+            scanner.next() 
+        }
     }
 }
 
