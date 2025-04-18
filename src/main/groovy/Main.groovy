@@ -158,7 +158,7 @@ static int readIntInput(String prompt) {
             return scanner.nextInt()
         } catch (Exception e) {
             println("Invalid input! Please enter a valid value.")
-            scanner.next() 
+            scanner.next()
         }
     }
 }
