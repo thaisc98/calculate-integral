@@ -33,7 +33,7 @@ def static readDoubleInput(String prompt) {
 }
 
 def static getIntegrationInput() {
-    println("=== Integral Calculator Input ===")
+    println("### Enter Inputs ###")
 
     def function = readFunctionInput()
     // Read bounds (for definite integral)
@@ -71,7 +71,6 @@ static String uSubstitution(String integrand) {
             },
             // Trig: sin(kx) or cos(kx)
             /(sin|cos)\((\d+)x\)/: { m ->
-                println("Trig function detected: ${m[0]}")
                 def func = m[0][1]
                 def coeff = m[0][2] as Integer
                 return [
@@ -94,6 +93,14 @@ static String uSubstitution(String integrand) {
 
 static String integrate(String integrand) {
     Map<String, Closure> integrationRules = [
+            'trig'       : { String expr ->
+                def trigFuncs = [
+                        'sin(x)': '-cos(x)',
+                        'cos(x)': 'sin(x)',
+                        'tan(x)': '-ln|cos(x)|'
+                ]
+                return trigFuncs[expr]
+            },
             'constant'    : { String expr ->
                 if (expr == '1') return 'x'
                 if (expr.matches(/^(\d+|\d+\.\d+)$/)) {
@@ -117,15 +124,8 @@ static String integrate(String integrand) {
                     return "(1/${coeff})${expr}"
                 }
                 return null
-            },
-            'trig'       : { String expr ->
-                def trigFuncs = [
-                        'sin(x)': '-cos(x)',
-                        'cos(x)': 'sin(x)',
-                        'tan(x)': '-ln|cos(x)|'
-                ]
-                return trigFuncs[expr]
             }
+
     ]
 
     // basic integration rules
@@ -141,20 +141,16 @@ static String integrate(String integrand) {
     return "Could not find integration method for: $integrand"
 }
 
-
-def static readFunctionInput(String prompt) {
-    Scanner scanner = new Scanner(System.in)
+def static validateExpression(String input) {
     try {
-        print(prompt)
-        String input = scanner.nextLine().trim()
-        if (!input.matches("(x\\^\\d+|e\\^\\d+x|sin\\(\\d+x\\)|cos\\(\\d+x\\)|tan\\(\\d+x\\)|\\d+|\\d+x)")) {
-            throw new IllegalArgumentException("Invalid input! Please enter an integer.")
-        }
-        return input
+        Binding binding = new Binding()
+        binding.setVariable("x", 1) // Test with a sample value
+        GroovyShell shell = new GroovyShell(binding)
+        shell.evaluate(input)
+        return true
     } catch (Exception e) {
-        println(e.message)
+        return false
     }
-
 }
 
 static void main(String[] args) {
@@ -170,7 +166,9 @@ static void main(String[] args) {
         return
     }
     if (choice == 1) {
-        String function = readFunctionInput("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
+        println("### Enter Inputs ###")
+        print("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
+        String function = new Scanner(System.in).nextLine().trim()
         println "∫ $function dx = ${integrate(function)} + C"
     } else if (choice == 2) {
         def (function, a, b, n) = getIntegrationInput()
