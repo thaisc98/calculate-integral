@@ -4,22 +4,22 @@ static void main(String[] args) {
     int choice = readIntInput(choicePrompt)
     switch (choice) {
         case 1:
-            handleSymbolicIntegration()
+            handleIntegrationUSubstitution()
             break
         case 2:
-            handleNumericalIntegration()
+            handleIntegrationSimpsonsRule()
             break
         default:
             println("We only expected 1 or 2.")
     }
 }
 
-static void handleSymbolicIntegration() {
+static void handleIntegrationUSubstitution() {
     String function = readStringInput("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
     println "∫ $function dx = ${integrate(function)} + C"
 }
 
-static void handleNumericalIntegration() {
+static void handleIntegrationSimpsonsRule() {
     def (function, a, b, n) = getIntegrationInput()
     Closure<Double> f = createFunctionClosure(function)
     double result = simpsonsRule(f, a, b, n)
