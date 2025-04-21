@@ -1,18 +1,5 @@
 
-static void main(String[] args) {
-    def choicePrompt = "Choose mode:\n1. Symbolic Integration using U-Substitution\n2. Numerical Integration using Simpson's Rule\nEnter choice 1 or 2: "
-    int choice = readIntInput(choicePrompt)
-    switch (choice) {
-        case 1:
-            handleSymbolicIntegration()
-            break
-        case 2:
-            handleNumericalIntegration()
-            break
-        default:
-            println("We only expected 1 or 2.")
-    }
-}
+
 
 static void handleSymbolicIntegration() {
     String function = readStringInput("Enter function ('x^2', 'e^3x', 'sin(x)'): ")
@@ -160,6 +147,21 @@ static int readIntInput(String prompt) {
             println("Invalid input! Please enter a valid value.")
             scanner.next()
         }
+    }
+}
+
+static void main(String[] args) {
+    def choicePrompt = "Choose mode:\n1. Symbolic Integration using U-Substitution\n2. Numerical Integration using Simpson's Rule\nEnter choice 1 or 2: "
+    int choice = readIntInput(choicePrompt)
+    switch (choice) {
+        case 1:
+            handleSymbolicIntegration()
+            break
+        case 2:
+            handleNumericalIntegration()
+            break
+        default:
+            println("We only expected 1 or 2.")
     }
 }
 
