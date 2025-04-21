@@ -1,6 +1,6 @@
 
 static void main(String[] args) {
-    def choicePrompt = "Choose mode:\n1. Symbolic Integration using U-Substitution\n2. Numerical Integration using Simpson's Rule\nEnter choice 1 or 2: "
+    def choicePrompt = "Choose mode:\n1. Integration using U-Substitution\n2. Integration using Simpson's Rule\nEnter choice 1 or 2: "
     int choice = readIntInput(choicePrompt)
     switch (choice) {
         case 1:
