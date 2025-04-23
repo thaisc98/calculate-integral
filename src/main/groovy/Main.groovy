@@ -54,7 +54,7 @@ static def getIntegrationInput() {
     String function = readStringInput("Enter function (Math.sin(x), Math.cos(x), Math.exp(x), x*x): ")
     double a = readDoubleInput("Enter lower bound (a): ")
     double b = readDoubleInput("Enter upper bound (b): ")
-    int n = (int) readDoubleInput("Enter number of intervals (n): ")
+    int n = (int) readDoubleInput("Enter number of intervals (n): ", true)
     return [function, a, b, n]
 }
 
@@ -137,12 +137,17 @@ static String readStringInput(String prompt) {
     return new Scanner(System.in).nextLine().trim()
 }
 
-static double readDoubleInput(String prompt) {
+static double readDoubleInput(String prompt, boolean enforceEven = false) {
     Scanner scanner = new Scanner(System.in)
     while (true) {
         try {
             print(prompt)
-            return scanner.nextDouble()
+            double value = scanner.nextDouble()
+            if (enforceEven && value % 2 != 0) {
+                println("The value must be an even number. Please try again.")
+                continue
+            }
+            return value
         } catch (Exception e) {
             println("Invalid input! Please enter a valid value.")
             scanner.next() // Clear invalid input
