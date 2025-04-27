@@ -150,7 +150,7 @@ static double readDoubleInput(String prompt, boolean enforceEven = false) {
             return value
         } catch (Exception e) {
             println("Invalid input! Please enter a valid value.")
-            scanner.next() // Clear invalid input
+            scanner.next()
         }
     }
 }
